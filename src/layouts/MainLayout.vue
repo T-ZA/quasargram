@@ -1,19 +1,46 @@
 <template>
   <q-layout view="lHh Lpr lFf">
+    <!-- App Header (desktop navigation) -->
     <q-header
       class="bg-white text-grey-10"
       bordered
     >
-      <q-toolbar>
+      <q-toolbar class="constrain">
+        <q-btn
+          class="large-screen-only q-mr-xs"
+          icon="eva-camera-outline"
+          size="18px"
+          dense
+          flat
+          round
+          to="/camera"
+        />
+
+        <q-separator
+          class="large-screen-only"
+          spaced
+          vertical
+        />
+
         <q-toolbar-title class="text-grand-hotel text-bold">
           Quasargram
         </q-toolbar-title>
+
+        <q-btn
+          class="large-screen-only"
+          icon="eva-home-outline"
+          size="18px"
+          dense
+          flat
+          round
+          to="/"
+        />
       </q-toolbar>
     </q-header>
 
     <!-- App Footer (for mobile navigation) -->
     <q-footer
-      class="bg-white"
+      class="bg-white small-screen-only"
       bordered
     >
       <q-tabs
@@ -53,6 +80,11 @@ export default {
       font-size: 30px
   .q-header
     .q-toolbar__title
-      text-align: center
+      @media (max-width: $breakpoint-xs-max)
+        text-align: center
       font-size: 30px
+  .q-toolbar
+    @media (min-width: $breakpoint-sm-min)
+      height: 77px
+
 </style>
