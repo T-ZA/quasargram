@@ -3,7 +3,11 @@
     <div class="row q-col-gutter-lg">
       <!-- Left column (posts) -->
       <div class="col-12 col-sm-8">
-        <div v-for="(post, index) in posts" :key="index" class="q-mb-md">
+        <div
+          v-for="(post, index) in posts"
+          :key="index"
+          class="q-mb-md"
+        >
           <q-card
             class="card-post"
             bordered
