@@ -2,20 +2,48 @@
   <q-page class="constrain-more q-pa-md">
     <!-- Image Preview -->
     <div class="camera-frame q-pa-md">
-      <q-img
+      <!-- Camera Feed -->
+      <video
+        v-show="!imageCaptured"
         class="full-width"
-        src="https://cdn.quasar.dev/img/parallax2.jpg"
+        autoplay
+        ref="video"
+        src=""
+      />
+
+      <!-- Canvas (to capture image from camera) -->
+      <canvas
+        v-show="imageCaptured"
+        class="full-width"
+        height="240"
+        ref="canvas"
       />
     </div>
 
     <div class="text-center q-pa-md">
       <!-- Take Picture button -->
       <q-btn
+        v-if="hasCameraSupport"
+        @click="captureImage()"
         color="grey-10"
         icon="eva-camera"
         size="lg"
         round
       />
+
+      <!-- File Picker (fallback for no camera access) -->
+      <q-file
+        v-else
+        v-model="imageUpload"
+        @input="captureImageFallback"
+        accept="image/*"
+        label="Choose an image"
+        outlined
+      >
+        <template v-slot:prepend>
+          <q-icon name="eva-attach-outline" />
+        </template>
+      </q-file>
 
       <!-- Caption input -->
       <div class="row justify-center q-ma-md">
@@ -61,6 +89,7 @@
 
 <script>
 import { uid } from 'quasar';
+require('md-gum-polyfill');
 
 export default {
   name: 'PageCamera',
@@ -72,7 +101,100 @@ export default {
         location: '',
         photo: null,
         date: Date.now()
+      },
+      imageCaptured: false,
+      imageUpload: [],
+      hasCameraSupport: true
+    }
+  },
+  methods: {
+    initCamera() {
+      navigator.mediaDevices.getUserMedia({
+        video: true
+      }).then((stream) => {
+        this.$refs.video.srcObject = stream;
+      }).catch((error) => {
+        this.hasCameraSupport = false;
+      });
+    },
+
+    disableCamera() {
+      this.$refs.video.srcObject.getVideoTracks().forEach((track) => {
+        track.stop();
+      });
+    },
+
+    captureImage() {
+      let video = this.$refs.video;
+      let canvas = this.$refs.canvas;
+
+      canvas.width = video.getBoundingClientRect().width;
+      canvas.height = video.getBoundingClientRect().height;
+
+      let context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      this.imageCaptured = true;
+
+      this.post.photo = this.dataURItoBlob(canvas.toDataURL());
+
+      this.disableCamera();
+    },
+
+    captureImageFallback(file) {
+      this.post.photo = file;
+
+      let canvas = this.$refs.canvas;
+      let context = canvas.getContext('2d');
+
+      // https://stackoverflow.com/questions/10906734/how-to-upload-image-into-html5-canvas
+      // http://jsfiddle.net/influenztial/qy7h5/
+      var reader = new FileReader();
+      reader.onload = (event) => {
+        var img = new Image();
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            context.drawImage(img, 0, 0);
+
+            this.imageCaptured = true;
+        }
+        img.src = event.target.result;
       }
+      reader.readAsDataURL(file);
+    },
+
+    // https://stackoverflow.com/questions/12168909/blob-from-dataurl
+    dataURItoBlob(dataURI) {
+      // convert base64 to raw binary data held in a string
+      // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+      var byteString = atob(dataURI.split(',')[1]);
+
+      // separate out the mime component
+      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+      // write the bytes of the string to an ArrayBuffer
+      var ab = new ArrayBuffer(byteString.length);
+
+      // create a view into the buffer
+      var ia = new Uint8Array(ab);
+
+      // set the bytes of the buffer to the correct values
+      for (var i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+      }
+
+      // write the ArrayBuffer to a blob, and you're done
+      var blob = new Blob([ab], {type: mimeString});
+      return blob;
+    }
+  },
+  mounted() {
+    this.initCamera();
+  },
+  beforeDestroy() {
+    if (this.hasCameraSupport) {
+      this.disableCamera();
     }
   }
 }
