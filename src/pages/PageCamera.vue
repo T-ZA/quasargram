@@ -62,9 +62,12 @@
           class="col col-sm-8"
           dense
           label="Location"
+          :loading="locationLoading"
         >
           <template v-slot:append>
             <q-btn
+              v-if="locationSupported && !locationLoading"
+              @click="getLocation()"
               icon="eva-navigation-2-outline"
               dense
               flat
@@ -89,7 +92,7 @@
 
 <script>
 import { uid } from 'quasar';
-require('md-gum-polyfill');
+require('md-gum-polyfill'); // getUserMedia() polyfill
 
 export default {
   name: 'PageCamera',
@@ -102,20 +105,30 @@ export default {
         photo: null,
         date: Date.now()
       },
+
       imageCaptured: false,
       imageUpload: [],
-      hasCameraSupport: true
+      hasCameraSupport: true,
+
+      locationLoading: false,
+      hasLocationSupport: true
+    }
+  },
+  computed: {
+    locationSupported() {
+      if ('geeolocation' in navigator) return true;
+      return false;
     }
   },
   methods: {
     initCamera() {
-      navigator.mediaDevices.getUserMedia({
-        video: true
-      }).then((stream) => {
-        this.$refs.video.srcObject = stream;
-      }).catch((error) => {
-        this.hasCameraSupport = false;
-      });
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          this.$refs.video.srcObject = stream;
+        })
+        .catch((error) => {
+          this.hasCameraSupport = false;
+        });
     },
 
     disableCamera() {
@@ -187,6 +200,54 @@ export default {
       // write the ArrayBuffer to a blob, and you're done
       var blob = new Blob([ab], {type: mimeString});
       return blob;
+    },
+
+    getLocation() {
+      this.locationLoading = true;
+
+      navigator.geolocation.getCurrentPosition((position) => {
+        this.getLocationData(position);
+      }, (error) => {
+        this.locationError();
+      },
+      {
+        timeout: 7000
+      });
+    },
+
+    getLocationData(position) {
+      let apiUrl = `https://geocode.xyz/${position.coords.latitude},${position.coords.longitude}?json=1`;
+
+      this.$axios.get(apiUrl)
+        .then((result) => {
+          this.locationSuccess(result);
+        })
+        .catch((error) => this.locationError());
+    },
+
+    locationSuccess(result) {
+      this.post.location = `${result.data.city}`;
+
+      // Add state if present in location result data
+      if (result.data.state) {
+        this.post.location += `, ${result.data.state}`;
+      }
+
+      // Add country if present in location result data
+      if (result.data.country) {
+        this.post.location += `, ${result.data.country}`;
+      }
+
+      this.locationLoading = false;
+    },
+
+    locationError() {
+      this.$q.dialog({
+        title: 'Error',
+        message: 'Unable to find your location'
+      });
+
+      this.locationLoading = false;
     }
   },
   mounted() {
