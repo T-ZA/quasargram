@@ -1,0 +1,18 @@
+{
+  "name": "quasargram-backend",
+  "version": "1.0.0",
+  "description": "Node.js & Express.js backend for the Quasargram PWA",
+  "main": "index.js",
+  "author": "T-ZA",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "nodemon index.js",
+    "deploy": "heroku builds:create -a quasargram-backend-t-za",
+    "heroku:logs": "heroku logs -a quasargram-backend-t-za --tail"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.4"
+  }
+}

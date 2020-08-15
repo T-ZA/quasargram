@@ -219,9 +219,7 @@ export default {
       let apiUrl = `https://geocode.xyz/${position.coords.latitude},${position.coords.longitude}?json=1`;
 
       this.$axios.get(apiUrl)
-        .then((result) => {
-          this.locationSuccess(result);
-        })
+        .then((result) => this.locationSuccess(result))
         .catch((error) => this.locationError());
     },
 
