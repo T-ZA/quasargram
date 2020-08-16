@@ -32,8 +32,12 @@ app.get('/', (request, response) => {
 
 // Get Posts
 app.get('/posts', (request, response) => {
+  response.set('Access-Control-Allow-Origin', '*');
+  response.cookie('sameSite', 'None');
+  response.cookie('secure');
+
   let posts = [];
-  db.collection('posts').get()
+  db.collection('posts').orderBy('date', 'desc').get()
     .then((snapshot) => {
       snapshot.forEach((doc) => {
         posts.push(doc.data());
