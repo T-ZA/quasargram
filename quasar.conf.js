@@ -6,7 +6,10 @@
 // Configuration for your app
 // https://quasar.dev/quasar-cli/quasar-conf-js
 
-module.exports = function (/* ctx */) {
+let QUASARGRAM_BACKEND_API_DEV = 'http://localhost:3000'
+    QUASARGRAM_BACKEND_API_PROD = 'https://quasargram-backend-t-za.herokuapp.com';
+
+module.exports = function (ctx) {
   return {
     // https://quasar.dev/quasar-cli/supporting-ts
     supportTS: false,
@@ -18,7 +21,6 @@ module.exports = function (/* ctx */) {
     // --> boot files are part of "main.js"
     // https://quasar.dev/quasar-cli/boot-files
     boot: [
-
       'axios',
     ],
 
@@ -64,6 +66,11 @@ module.exports = function (/* ctx */) {
       // https://quasar.dev/quasar-cli/handling-webpack
       extendWebpack (cfg) {
       },
+      env: {
+        QUASARGRAM_BACKEND_API: ctx.dev
+          ? QUASARGRAM_BACKEND_API_DEV
+          : QUASARGRAM_BACKEND_API_PROD
+      }
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
@@ -92,7 +99,11 @@ module.exports = function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Dialog']
+      plugins: [
+        'Dialog',
+        'Notify',
+        'Loading'
+      ]
     },
 
     // animations: 'all', // --- includes all animations

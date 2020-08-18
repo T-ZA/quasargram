@@ -26,6 +26,7 @@
         v-if="hasCameraSupport"
         @click="captureImage()"
         color="grey-10"
+        :disable="imageCaptured"
         icon="eva-camera"
         size="lg"
         round
@@ -64,6 +65,7 @@
           label="Location"
           :loading="locationLoading"
         >
+          <!-- Get Location button -->
           <template v-slot:append>
             <q-btn
               v-if="locationSupported && !locationLoading"
@@ -80,7 +82,9 @@
       <!-- Post Image button -->
       <div class="row justify-center q-mt-lg">
         <q-btn
+          @click="addPost()"
           color="primary"
+          :disable="!post.caption.length || !post.photo"
           label="Post Image"
           rounded
           unelevated
@@ -116,7 +120,7 @@ export default {
   },
   computed: {
     locationSupported() {
-      if ('geeolocation' in navigator) return true;
+      if ('geolocation' in navigator) return true;
       return false;
     }
   },
@@ -246,8 +250,53 @@ export default {
       });
 
       this.locationLoading = false;
+    },
+
+    addPost() {
+      this.$q.loading.show();
+
+      let requestForm = new FormData();
+
+      requestForm.append('id', this.post.id);
+      requestForm.append('caption', this.post.caption);
+      requestForm.append('location', this.post.location);
+      requestForm.append('date', this.post.date);
+      requestForm.append('file', this.post.photo, this.post.id + '.png');
+
+      this.$axios.post(`${process.env.QUASARGRAM_BACKEND_API}/createPost`, requestForm)
+        .then((response) => {
+          // REdirect to home after successful post
+          this.$router.push('/');
+
+          // Notify of post success
+          this.$q.notify({
+            progress: true,
+            timeout: 3000,
+            message: 'Post created!',
+            color: 'positive',
+            actions: [
+              {
+                label: 'Dismiss', color: 'white'
+              }
+            ]
+          });
+        })
+        .catch((error) => {
+          console.error(error.message);
+
+          // Display error dialog
+          this.$q.dialog({
+            title: 'Error',
+            message: 'Unable to create post'
+          });
+        })
+        .finally(() => this.$q.loading.hide());
     }
   },
+
+  /*
+    Lifecycle Hooks
+  */
   mounted() {
     this.initCamera();
   },
