@@ -72,7 +72,7 @@ export default {
       //   })
       //   .finally(() => this.loadingPosts = false)
       // }, 3000);
-      this.$axios.get('http://localhost:3000/posts')
+      this.$axios.get(`${process.env.QUASARGRAM_BACKEND_API}/posts`)
         .then((result) => {
           this.posts = result.data;
         })
@@ -86,6 +86,10 @@ export default {
         .finally(() => this.loadingPosts = false);
     }
   },
+
+  /*
+    Lifecycle Hooks
+  */
   created() {
     this.getPosts();
   }

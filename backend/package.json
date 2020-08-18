@@ -12,8 +12,10 @@
     "heroku:logs": "heroku logs -a quasargram-backend-t-za --tail"
   },
   "dependencies": {
+    "busboy": "^0.3.1",
     "express": "^4.17.1",
     "firebase-admin": "^9.1.0",
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.4",
+    "uuid-v4": "^0.1.0"
   }
 }
