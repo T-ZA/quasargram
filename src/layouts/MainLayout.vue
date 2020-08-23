@@ -43,7 +43,7 @@
       class="bg-white"
       bordered
     >
-      <install-app-banner v-if="showAppInstallBanner" />
+      <install-app-banner />
 
       <!-- Mobile Navigation tabs -->
       <q-tabs
@@ -69,30 +69,13 @@
 </template>
 
 <script>
-let deferredPrompt;
-
 export default {
   name: 'MainLayout',
   components: {
     'install-app-banner': () => import('src/components/InstallAppBanner.vue')
   },
   data () {
-    return {
-      showAppInstallBanner: false
-    }
-  },
-  mounted() {
-    // https://web.dev/customize-install/
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-
-      // Stash the event so it can be triggered later.
-      deferredPrompt = e;
-
-      // Update UI notify the user they can install the PWA
-      this.showAppInstallBanner = true;
-    });
+    return {}
   }
 }
 </script>
