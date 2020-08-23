@@ -100,6 +100,8 @@ require('md-gum-polyfill'); // getUserMedia() polyfill
 
 export default {
   name: 'PageCamera',
+
+
   data() {
     return {
       post: {
@@ -118,12 +120,16 @@ export default {
       hasLocationSupport: true
     }
   },
+
+
   computed: {
     locationSupported() {
       if ('geolocation' in navigator) return true;
       return false;
     }
   },
+
+
   methods: {
     initCamera() {
       navigator.mediaDevices.getUserMedia({ video: true })
@@ -294,12 +300,15 @@ export default {
     }
   },
 
+
   /*
     Lifecycle Hooks
   */
   mounted() {
     this.initCamera();
   },
+
+
   beforeDestroy() {
     if (this.hasCameraSupport) {
       this.disableCamera();
