@@ -38,13 +38,16 @@
       </q-toolbar>
     </q-header>
 
-    <!-- App Footer (for mobile navigation) -->
+    <!-- App Footer -->
     <q-footer
-      class="bg-white small-screen-only"
+      class="bg-white"
       bordered
     >
+      <install-app-banner v-if="showAppInstallBanner" />
+
+      <!-- Mobile Navigation tabs -->
       <q-tabs
-        class="text-grey-10"
+        class="text-grey-10 small-screen-only"
         active-color="primary"
         indicator-color="transparent"
       >
@@ -66,10 +69,30 @@
 </template>
 
 <script>
+let deferredPrompt;
+
 export default {
   name: 'MainLayout',
+  components: {
+    'install-app-banner': () => import('src/components/InstallAppBanner.vue')
+  },
   data () {
-    return {}
+    return {
+      showAppInstallBanner: false
+    }
+  },
+  mounted() {
+    // https://web.dev/customize-install/
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+
+      // Stash the event so it can be triggered later.
+      deferredPrompt = e;
+
+      // Update UI notify the user they can install the PWA
+      this.showAppInstallBanner = true;
+    });
   }
 }
 </script>
