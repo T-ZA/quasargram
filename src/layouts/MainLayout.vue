@@ -38,13 +38,16 @@
       </q-toolbar>
     </q-header>
 
-    <!-- App Footer (for mobile navigation) -->
+    <!-- App Footer -->
     <q-footer
-      class="bg-white small-screen-only"
+      class="bg-white"
       bordered
     >
+      <install-app-banner />
+
+      <!-- Mobile Navigation tabs -->
       <q-tabs
-        class="text-grey-10"
+        class="text-grey-10 small-screen-only"
         active-color="primary"
         indicator-color="transparent"
       >
@@ -68,6 +71,9 @@
 <script>
 export default {
   name: 'MainLayout',
+  components: {
+    'install-app-banner': () => import('src/components/InstallAppBanner.vue')
+  },
   data () {
     return {}
   }
