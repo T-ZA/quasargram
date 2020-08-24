@@ -82,7 +82,7 @@ app.post('/createPost', (request, response) => {
     // File metadata
     console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
 
-    // /tmp/{id}.png
+    // Store image file in the temp directory on the user's OS
     let filepath = path.join(os.tmpdir(), filename);
     file.pipe(fs.createWriteStream(filepath));
 
@@ -124,6 +124,7 @@ app.post('/createPost', (request, response) => {
         }
       },
       (err, uploadedFile) => {
+        // Create post document in Cloud Firestore if image upload is successful
         if (!err) {
           createDocument(uploadedFile);
         }
