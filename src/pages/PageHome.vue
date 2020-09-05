@@ -43,6 +43,8 @@
 </template>
 
 <script>
+import { openDB } from 'idb';
+
 export default {
   name: 'PageHome',
   components: {
@@ -53,6 +55,12 @@ export default {
     return {
       posts: [],
       loadingPosts: false
+    }
+  },
+  computed: {
+    serviceWorkerSupported() {
+      if ('serviceWorker' in navigator) return true;
+      return false;
     }
   },
   methods: {
@@ -75,6 +83,10 @@ export default {
       this.$axios.get(`${process.env.QUASARGRAM_BACKEND_API}/posts`)
         .then((result) => {
           this.posts = result.data;
+
+          if (!navigator.onLine) {
+            this.getOfflinePosts();
+          }
         })
         .catch((error) => {
           console.error(error);
@@ -84,14 +96,86 @@ export default {
           });
         })
         .finally(() => this.loadingPosts = false);
+    },
+
+    getOfflinePosts() {
+      let idb = openDB('workbox-background-sync')
+        .then((db) => {
+          return db.getAll('requests');
+        })
+        .then((failedRequests) => {
+          // iterate over each failed request
+          // and extract its form data to add offline posts to posts list
+          failedRequests.forEach((failedRequest) => {
+            // ensure entries in IndexedDb are for the 'createPostQueue' queue
+            if (failedRequest.queueName === 'createPostQueue') {
+              const request = new Request(failedRequest.requestData.url, failedRequest.requestData);
+
+              // Extract form data from request
+              request.formData()
+                .then((formData) => {
+                  let offlinePost = {};
+
+                  offlinePost.offline = true;
+
+                  offlinePost.id = formData.get('id');
+                  offlinePost.caption = formData.get('caption');
+                  offlinePost.location = formData.get('location');
+                  offlinePost.date = parseInt(formData.get('date'));
+
+                  // retrieve image from form data as data url
+                  let reader = new FileReader();
+                  reader.readAsDataURL(formData.get('file'));
+                  reader.onloadend = () => {
+                    offlinePost.imageUrl = reader.result;
+
+                    // add offline post to beginning of posts array
+                    this.posts.unshift(offlinePost);
+                  }
+                });
+            }
+          })
+        })
+        .catch((error) => {
+          console.error('Error accessing IndexedDB: ', error);
+        });
+    },
+
+    listenForOfflinePostUploaded() {
+      if (this.serviceWorkerSupported) {
+        // Listen out for offline-post-uploaded message from service worker
+        // after an offline post has been successfully uploaded
+        // https://stackoverflow.com/questions/42127148/service-worker-communicate-to-clients
+        const channel = new BroadcastChannel('sw-messages');
+        channel.addEventListener('message', (event) => {
+            if (process.env.DEV) {
+              console.log('Received offline-post-uploaded', event.data);
+            }
+
+            // For the offline-post-uploaded event
+            if (event.data.msg == 'offline-post-uploaded') {
+              // Get remaining number of offline posts
+              let offlinePostCount = this.posts.filter((post) => post.offline == true).length;
+
+              // Set the 'offline' property for an offline post in posts[] to false
+              this.posts[offlinePostCount - 1].offline = false;
+            }
+        });
+      }
     }
   },
 
   /*
     Lifecycle Hooks
   */
-  created() {
+  // The 'activated' hook is used when a page surrounded with <keep-alive>
+  // needs something to trigger every time that page is rendered
+  activated() {
     this.getPosts();
+  },
+
+  created() {
+    this.listenForOfflinePostUploaded();
   }
 }
 </script>

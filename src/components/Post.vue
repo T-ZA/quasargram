@@ -1,9 +1,21 @@
 <template>
   <q-card
     class="card-post"
+    :class="{ 'bg-red-1': post.offline }"
     bordered
     flat
   >
+    <!-- Display "Stored Offline" badge for offline posts -->
+    <q-badge
+      v-if="post.offline"
+      class="absolute-top-right badge-offline"
+      color="red"
+      floating
+    >
+      Stored Offline
+    </q-badge>
+
+    <!-- Post Header (User, avatar, location) -->
     <q-item>
       <q-item-section avatar>
         <q-avatar>
@@ -21,8 +33,10 @@
 
     <q-separator />
 
+    <!-- Post image -->
     <q-img :src="post.imageUrl" :ratio="1"/>
 
+    <!-- Post footer (post name, timestamp) -->
     <q-card-section>
       <div>{{ post.caption }}</div>
       <div class="text-caption text-grey">{{ post.date | humanReadableDate }}</div>
@@ -47,6 +61,8 @@ export default {
 
 <style lang="sass" scoped>
   .card-post
+    .badge-offline
+        border-top-left-radius: 0 !important
     .q-img
       min-height: 200px
 </style>

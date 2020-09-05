@@ -1,8 +1,8 @@
 <template>
   <transition
     appear
-    enter-active-class="animated fadeInUp"
-    leave-active-class="animated fadeOutDown"
+    enter-active-class="animated slideInUp"
+    leave-active-class="animated slideOutDown"
   >
     <div v-if="showAppInstallBanner" class="bg-primary">
       <div class="constrain">
