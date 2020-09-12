@@ -65,6 +65,7 @@ export default {
       showAppInstallBanner: false
     }
   },
+
   methods:{
     installApp() {
       // https://web.dev/customize-install/

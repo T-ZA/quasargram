@@ -14,6 +14,8 @@ const fs = require('fs');
 
 const UUID_V4 = require('uuid-v4');
 
+const webpush = require('web-push');
+
 
 /*
   config - Express
@@ -35,6 +37,20 @@ admin.initializeApp({
 
 const db = admin.firestore(); // Cloud Firestore
 const bucket = admin.storage().bucket(); // Firebase Storage
+
+
+/*
+  config - webpush
+*/
+webpush.setVapidDetails(
+  'mailto:ricky.sanders62@gmail.com',
+
+  // public keyy
+  'BBcgM9CoP8lTIawFSU5c0ZlowZp_X_Be6BTxFH40jg3WxIo7KyUJEalxqGqSLzIbYcZM4p1QKaUvWQfd2EaTeTk',
+
+  // private key
+  'TxcOl-sCCJhop1TVG6IQRworbPBimekP_JEAUMVKeiA'
+);
 
 
 /*
@@ -105,6 +121,8 @@ app.post('/createPost', (request, response) => {
   // Occurs for each field in the form
   busboy.on('field', function (fieldname, val, fieldnameTruncated, valTruncated, encoding, mimetype) {
     // console.log('Field [' + fieldname + ']: value: ' + inspect(val));
+
+    // Add each field from the form into the postData array
     postData[fieldname] = val;
   });
 
@@ -124,14 +142,15 @@ app.post('/createPost', (request, response) => {
         }
       },
       (err, uploadedFile) => {
-        // Create post document in Cloud Firestore if image upload is successful
+        // If image upload is successful,
+        // create post document in Cloud Firestore
         if (!err) {
           createDocument(uploadedFile);
         }
       }
     );
 
-    // Create document in Firebase
+    // Create document in Cloud Firestore
     function createDocument(uploadedFile) {
       db.collection('posts').doc(postData.id).set({
         id: postData.id,
@@ -141,12 +160,64 @@ app.post('/createPost', (request, response) => {
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`
       })
         .then(() => {
+          sendPostCreatedPushNotification();
           response.send(`Post added: ${postData.id}`);
         });
+    }
+
+    function sendPostCreatedPushNotification() {
+      let subscriptions = [];
+      db.collection('subscriptions').get()
+        .then((snapshot) => {
+          // Get all stored subscriptions for notifying users
+          snapshot.forEach((doc) => {
+            subscriptions.push(doc.data());
+          });
+
+          return subscriptions;
+        })
+        .then((subRes) => {
+          subRes.forEach((subscription) => {
+            const pushSubscription = {
+              endpoint: subscription.endpoint,
+              keys: {
+                auth: subscription.keys.auth,
+                p256dh: subscription.keys.p256dh
+              }
+            };
+
+            const pushContent = {
+              title: 'New Quasargram Post',
+              body: 'New Post Added!',
+              openUrl: '/#/'
+            };
+
+            const pushContentStringified = JSON.stringify(pushContent);
+
+            webpush.sendNotification(pushSubscription, pushContentStringified);
+          });
+        })
+        .catch((error) => console.error(error.message));
     }
   });
 
   request.pipe(busboy);
+});
+
+/*
+  Endpoint - Create Subscription
+*/
+app.post('/createSubscription', (request, response) => {
+  response.set('Access-Control-Allow-Origin', '*');
+  console.log(request.query);
+
+  db.collection('subscriptions').add(request.query)
+    .then((docRef) => {
+      response.send({
+        message: 'Subscription added successfully',
+        postData: request.query
+      });
+    });
 });
 
 

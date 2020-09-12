@@ -117,15 +117,91 @@ if (backgroundSyncSupported) {
     // Determine the URL of the fetch request prior to acting on
     // adding the request to a background sync queue
     if (event.request.url.endsWith('/createPost')) {
-      // Clone the request to ensure it's safe to read when
-      // adding to the Queue.
-      const promiseChain =
-        fetch(event.request.clone())
-        .catch((err) => {
-          return createPostQueue.pushRequest({request: event.request});
-        });
+      // Clone the request to ensure it's safe to read when adding to the Queue.
+      // Only do this if the user is offline
+      // https://github.com/GoogleChrome/workbox/issues/1480#issuecomment-579948965
+      if (!self.navigator.onLine) {
+        const promiseChain =
+          fetch(event.request.clone())
+          .catch((err) => {
+            return createPostQueue.pushRequest({request: event.request});
+          });
 
-      event.waitUntil(promiseChain);
+        event.waitUntil(promiseChain);
+      }
     }
   });
 }
+
+
+/*
+  Events - Push
+*/
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    let data = JSON.parse(event.data.text());
+
+    // Ensure that service workser stays awake
+    event.waitUntil(
+      // Send notification using the data received from the push notification
+      self.registration.showNotification(
+        data.title,
+        {
+          body: data.body,
+          icon: 'icons/icon-128x128.png',
+          badge: 'icons/icon-128x128.png',
+          data: {
+            openUrl: data.openUrl
+          }
+        }
+      )
+    );
+  }
+});
+
+
+/*
+  Events - Notifications
+*/
+self.addEventListener('notificationclick', (event) => {
+  let notification = event.notification;
+  let action = event.action;
+
+  if (action == 'hello') {
+    console.log('Hello button was clicked');
+  }
+  else if (action == 'goodbye') {
+    console.log('Goodbye button was clicked');
+  }
+  else {
+    console.log('Main notification was clicked');
+
+    // Ensure that service workser stays awake
+    event.waitUntil(
+      clients.matchAll()
+        .then((clis) => {
+          let clientUsingApp = clis.find((cli) => {
+            return cli.visibilityState == 'visible';
+          });
+
+          // If user is currently in the app but on a different view,
+          // direct user to main route and focus tab
+          if (clientUsingApp) {
+            clientUsingApp.navigate(notification.data.openUrl);
+            clientUsingApp.focus();
+          }
+          // Else, open a new browser window to the main app view
+          else {
+            clients.openWindow(notification.data.openUrl);
+          }
+        })
+        .catch((error) => console.error(error.message))
+    );
+  }
+
+  notification.close();
+});
+
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification was closed', event);
+});

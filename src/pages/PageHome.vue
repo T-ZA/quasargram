@@ -1,5 +1,7 @@
 <template>
   <q-page class="constrain q-pa-md">
+    <enable-notifications-banner />
+
     <div class="row q-col-gutter-lg">
 
       <!-- Left column (posts) -->
@@ -18,7 +20,11 @@
         </template>
 
         <template v-else>
-          <post-skeleton class="q-mb-md" />
+          <post-skeleton
+            v-for="i in 3"
+            :key="i"
+            class="q-mb-md"
+          />
         </template>
       </div>
 
@@ -49,7 +55,8 @@ export default {
   name: 'PageHome',
   components: {
     'post': () => import('src/components/Post.vue'),
-    'post-skeleton': () => import('src/components/PostSkeleton.vue')
+    'post-skeleton': () => import('src/components/PostSkeleton.vue'),
+    'enable-notifications-banner': () => import('src/components/EnableNotificationsBanner.vue')
   },
   data() {
     return {

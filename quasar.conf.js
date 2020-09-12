@@ -6,8 +6,8 @@
 // Configuration for your app
 // https://quasar.dev/quasar-cli/quasar-conf-js
 
-let QUASARGRAM_BACKEND_API_DEV = 'http://localhost:3000'
-    QUASARGRAM_BACKEND_API_PROD = 'https://quasargram-backend-t-za.herokuapp.com';
+let QUASARGRAM_BACKEND_API_DEV = 'http://localhost:3000';
+let QUASARGRAM_BACKEND_API_PROD = 'https://quasargram-backend-t-za.herokuapp.com';
 
 module.exports = function (ctx) {
   return {
@@ -111,6 +111,8 @@ module.exports = function (ctx) {
     // https://quasar.dev/options/animations
     animations: [
       'slideInUp',
+      'slideInDown',
+      'slideOutUp',
       'slideOutDown'
     ],
 
