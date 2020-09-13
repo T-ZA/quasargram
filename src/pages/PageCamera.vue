@@ -126,6 +126,11 @@ export default {
     locationSupported() {
       if ('geolocation' in navigator) return true;
       return false;
+    },
+
+    backgroundSyncSupported() {
+      if ('serviceWorker' in navigator && 'SyncManager' in window) return true;
+      return false;
     }
   },
 
@@ -135,6 +140,7 @@ export default {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then((stream) => {
           this.$refs.video.srcObject = stream;
+          this.imageCaptured = false;
         })
         .catch((error) => {
           this.hasCameraSupport = false;
@@ -271,7 +277,7 @@ export default {
 
       this.$axios.post(`${process.env.QUASARGRAM_BACKEND_API}/createPost`, requestForm)
         .then((response) => {
-          // REdirect to home after successful post
+          // Redirect to home after successful post
           this.$router.push('/');
 
           // Notify of post success
@@ -290,11 +296,20 @@ export default {
         .catch((error) => {
           console.error(error.message);
 
-          // Display error dialog
+          // If error is due to being offline
+          // and browser supports background sync,
+          // re-route to home page
+          if (!navigator.onLine && this.backgroundSyncSupported) {
+            this.$q.notify('Post created offline');
+            this.$router.push('/');
+          }
+          else {
+            // Display error dialog
           this.$q.dialog({
             title: 'Error',
             message: 'Unable to create post'
           });
+          }
         })
         .finally(() => this.$q.loading.hide());
     }
@@ -305,6 +320,7 @@ export default {
     Lifecycle Hooks
   */
   mounted() {
+    this.imageCaptured = true;
     this.initCamera();
   },
 

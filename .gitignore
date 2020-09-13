@@ -35,3 +35,6 @@ yarn-error.log*
 
 # Firebase private files
 serviceAccountKey.json
+
+# Firebase deployment
+.firebase

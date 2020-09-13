@@ -6,8 +6,8 @@
 // Configuration for your app
 // https://quasar.dev/quasar-cli/quasar-conf-js
 
-let QUASARGRAM_BACKEND_API_DEV = 'http://localhost:3000'
-    QUASARGRAM_BACKEND_API_PROD = 'https://quasargram-backend-t-za.herokuapp.com';
+let QUASARGRAM_BACKEND_API_DEV = 'http://localhost:3000';
+let QUASARGRAM_BACKEND_API_PROD = 'https://quasargram-backend-t-za.herokuapp.com';
 
 module.exports = function (ctx) {
   return {
@@ -77,7 +77,7 @@ module.exports = function (ctx) {
     devServer: {
       https: false,
       port: 8080,
-      open: true // opens browser window automatically
+      open: false // opens browser window automatically
     },
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
@@ -110,8 +110,10 @@ module.exports = function (ctx) {
     // animations: 'all', // --- includes all animations
     // https://quasar.dev/options/animations
     animations: [
-      'fadeInUp',
-      'fadeOutDown'
+      'slideInUp',
+      'slideInDown',
+      'slideOutUp',
+      'slideOutDown'
     ],
 
     // https://quasar.dev/quasar-cli/developing-ssr/configuring-ssr
@@ -121,7 +123,7 @@ module.exports = function (ctx) {
 
     // https://quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {
-      workboxPluginMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
+      workboxPluginMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
       workboxOptions: {}, // only for GenerateSW
       manifest: {
         name: `Quasargram - Share Your World!`,
