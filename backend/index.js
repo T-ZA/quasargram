@@ -85,6 +85,8 @@ app.get('/posts', (request, response) => {
 */
 app.post('/createPost', (request, response) => {
   response.set('Access-Control-Allow-Origin', '*');
+  response.cookie('sameSite', 'None');
+  response.cookie('secure');
 
   let uuid = UUID_V4();
 
@@ -209,6 +211,9 @@ app.post('/createPost', (request, response) => {
 */
 app.post('/createSubscription', (request, response) => {
   response.set('Access-Control-Allow-Origin', '*');
+  response.cookie('sameSite', 'None');
+  response.cookie('secure');
+
   console.log(request.query);
 
   db.collection('subscriptions').add(request.query)
