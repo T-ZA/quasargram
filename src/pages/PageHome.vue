@@ -87,7 +87,15 @@ export default {
       //   })
       //   .finally(() => this.loadingPosts = false)
       // }, 3000);
-      this.$axios.get(`${process.env.QUASARGRAM_BACKEND_API}/posts`)
+      let getPostsURI = `${process.env.QUASARGRAM_BACKEND_API}/posts`;
+
+      // Add a unique timestamp to request URL to prevent aggressive caching (IE)
+      if (this.$q.platform.is.ie) {
+        let uniqueForIE = `?timestamp=${Date.now()}`;
+        getPostsURI += uniqueForIE;
+      }
+
+      this.$axios.get(getPostsURI)
         .then((result) => {
           this.posts = result.data;
 
