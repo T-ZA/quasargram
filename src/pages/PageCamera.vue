@@ -275,10 +275,10 @@ export default {
       // Get postCreated flag from LocalStorage prior to making a post
       let postCreated = this.$q.localStorage.getItem('postCreated');
 
-      // If offline on Android and has not created a successful post,
+      // If offline on Android and have not created a successful post,
       // return an error message to the user that it will not work
       // (users on Android need to successfully create a post prior to background sync working)
-      if (this.$q.platform.is.android && !navigator.onLine && !this.postCreated) {
+      if (this.$q.platform.is.android && !postCreated && !navigator.onLine) {
         this.addPostError();
         this.$q.loading.hide();
       }
@@ -293,9 +293,10 @@ export default {
 
         this.$axios.post(`${process.env.QUASARGRAM_BACKEND_API}/createPost`, requestForm)
           .then((response) => {
-            // If on a mobile device,
-            // set flag in LocalStorage that the user has at least created one successful online post
-            if (this.$q.platform.is.mobile) this.$q.localStorage.set('postCreated', true);
+            console.log('/createPost response: ', response);
+
+            // Set flag in LocalStorage that the user has at least created one successful online post
+            this.$q.localStorage.set('postCreated', true);
 
             // Redirect to home after successful post
             this.$router.push('/');
@@ -314,17 +315,21 @@ export default {
             });
           })
           .catch((error) => {
-            console.error(error.message);
+            console.error(error);
 
             // If error is due to being offline
             // and browser supports background sync,
             // re-route to home page
+            console.log('online: ', navigator.onLine);
+            console.log('backgroundSync: ', this.backgroundSyncSupported);
+            console.log('postCreated: ', postCreated);
+
             if (!navigator.onLine && this.backgroundSyncSupported && postCreated) {
               this.$q.notify('Post created offline');
               this.$router.push('/');
             }
             else {
-              this.addPost();
+              this.addPostError();
             }
           })
           .finally(() => this.$q.loading.hide());
