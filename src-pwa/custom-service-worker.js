@@ -52,7 +52,8 @@ if (backgroundSyncSupported) {
             // https://stackoverflow.com/questions/42127148/service-worker-communicate-to-clients
             const channel = new BroadcastChannel('sw-messages');
             channel.postMessage({msg: 'offline-post-uploaded'});
-          } catch (error) {
+          }
+          catch (error) {
             console.error('Replay failed for request', entry.request, error);
 
             // Put the entry back in the queue and re-throw the error:
@@ -60,6 +61,7 @@ if (backgroundSyncSupported) {
             throw error;
           }
         }
+
         console.log('Replay complete!');
       }
     }
@@ -94,7 +96,10 @@ registerRoute(
 // Network-first strategy
 // (good for content that always needs to be up-to-date)
 registerRoute(
+  // paths that will use this strategy
   ({url}) => url.pathname.startsWith('/posts'),
+
+  // actual strategy used
   new NetworkFirst()
 );
 
@@ -127,6 +132,7 @@ if (backgroundSyncSupported) {
             return createPostQueue.pushRequest({request: event.request});
           });
 
+        // Ensure that service workser stays awake
         event.waitUntil(promiseChain);
       }
     }

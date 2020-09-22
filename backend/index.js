@@ -100,7 +100,10 @@ app.post('/createPost', (request, response) => {
   // Occurs for each file in the form
   busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
     // File metadata
-    console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+    console.log(`----------------------------------------\n`);
+    console.log(`Busboy - On: File\n`)
+    console.log(`File [ ${fieldname} ]: filename: ${filename}, encoding: ${encoding}, mimetype: ${mimetype}\n`);
+    console.log(`----------------------------------------\n\n`);
 
     // Store image file in the temp directory on the user's OS
     let filepath = path.join(os.tmpdir(), filename);
@@ -132,6 +135,8 @@ app.post('/createPost', (request, response) => {
 
   // End of form processing
   busboy.on('finish', function () {
+    console.log(`----------------------------------------\n`);
+    console.log(`Busboy - On: Finish\n`);
     console.log(postData);
 
     // Upload the received image to Firebase Storage
@@ -175,8 +180,9 @@ app.post('/createPost', (request, response) => {
     function sendPostCreatedPushNotification() {
       let subscriptions = [];
 
-      console.log(`----------------------------------------\n`);
-      console.log(`Sending ${'post created'} push notifications\n`);
+      console.log(`\n----------------------------------------\n`);
+      console.log(`sendPostCreatedPushNotification()\n`);
+
 
       db.collection('subscriptions').get()
         .then((snapshot) => {
@@ -188,6 +194,8 @@ app.post('/createPost', (request, response) => {
           return subscriptions;
         })
         .then((subRes) => {
+          console.log(`Sending ${'post created'} push notifications\n`);
+
           subRes.forEach((subscription) => {
             const pushSubscription = {
               endpoint: subscription.endpoint,
@@ -211,10 +219,10 @@ app.post('/createPost', (request, response) => {
             console.log(`Push notification sent to: ${pushSubscription.endpoint}\n`);
           });
         })
-        .catch((error) => console.error(error.message))
+        .catch((error) => console.error(error))
         .finally(() => {
           console.log(`Finished sending all ${'post created'} push notifications\n`);
-          console.log(`----------------------------------------\n`);
+          console.log(`----------------------------------------\n\n`);
         });
     }
   });
@@ -230,7 +238,10 @@ app.post('/createSubscription', (request, response) => {
   response.cookie('sameSite', 'None');
   response.cookie('secure');
 
+  console.log(`----------------------------------------\n`);
+  console.log(`/createSubscription\n`);
   console.log(request.query);
+  console.log(`----------------------------------------\n\n`);
 
   db.collection('subscriptions').add(request.query)
     .then((docRef) => {
