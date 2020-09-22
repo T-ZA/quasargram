@@ -272,51 +272,71 @@ export default {
     addPost() {
       this.$q.loading.show();
 
-      let requestForm = new FormData();
+      // Get postCreated flag from LocalStorage prior to making a post
+      let postCreated = this.$q.localStorage.getItem('postCreated');
 
-      requestForm.append('id', this.post.id);
-      requestForm.append('caption', this.post.caption);
-      requestForm.append('location', this.post.location);
-      requestForm.append('date', this.post.date);
-      requestForm.append('file', this.post.photo, this.post.id + '.png');
+      // If offline on Android and has not created a successful post,
+      // return an error message to the user that it will not work
+      // (users on Android need to successfully create a post prior to background sync working)
+      if (this.$q.platform.is.android && !navigator.onLine && !this.postCreated) {
+        this.addPostError();
+        this.$q.loading.hide();
+      }
+      else {
+        let requestForm = new FormData();
 
-      this.$axios.post(`${process.env.QUASARGRAM_BACKEND_API}/createPost`, requestForm)
-        .then((response) => {
-          // Redirect to home after successful post
-          this.$router.push('/');
+        requestForm.append('id', this.post.id);
+        requestForm.append('caption', this.post.caption);
+        requestForm.append('location', this.post.location);
+        requestForm.append('date', this.post.date);
+        requestForm.append('file', this.post.photo, this.post.id + '.png');
 
-          // Notify of post success
-          this.$q.notify({
-            progress: true,
-            timeout: 3000,
-            message: 'Post created!',
-            color: 'positive',
-            actions: [
-              {
-                label: 'Dismiss', color: 'white'
-              }
-            ]
-          });
-        })
-        .catch((error) => {
-          console.error(error.message);
+        this.$axios.post(`${process.env.QUASARGRAM_BACKEND_API}/createPost`, requestForm)
+          .then((response) => {
+            // If on a mobile device,
+            // set flag in LocalStorage that the user has at least created one successful online post
+            if (this.$q.platform.is.mobile) this.$q.localStorage.set('postCreated', true);
 
-          // If error is due to being offline
-          // and browser supports background sync,
-          // re-route to home page
-          if (!navigator.onLine && this.backgroundSyncSupported) {
-            this.$q.notify('Post created offline');
+            // Redirect to home after successful post
             this.$router.push('/');
-          }
-          else {
-            // Display error dialog
-          this.$q.dialog({
-            title: 'Error',
-            message: 'Unable to create post'
-          });
-          }
-        })
-        .finally(() => this.$q.loading.hide());
+
+            // Notify of post success
+            this.$q.notify({
+              progress: true,
+              timeout: 3000,
+              message: 'Post created!',
+              color: 'positive',
+              actions: [
+                {
+                  label: 'Dismiss', color: 'white'
+                }
+              ]
+            });
+          })
+          .catch((error) => {
+            console.error(error.message);
+
+            // If error is due to being offline
+            // and browser supports background sync,
+            // re-route to home page
+            if (!navigator.onLine && this.backgroundSyncSupported && postCreated) {
+              this.$q.notify('Post created offline');
+              this.$router.push('/');
+            }
+            else {
+              this.addPost();
+            }
+          })
+          .finally(() => this.$q.loading.hide());
+      }
+    },
+
+    addPostError() {
+      // Display error dialog
+      this.$q.dialog({
+        title: 'Error',
+        message: 'Unable to create post'
+      });
     }
   },
 
