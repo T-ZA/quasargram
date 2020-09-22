@@ -95,6 +95,8 @@ app.post('/createPost', (request, response) => {
   let postData = {};
   let fileData = {};
 
+  let imageUrl;
+
   // Occurs for each file in the form
   busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
     // File metadata
@@ -154,21 +156,28 @@ app.post('/createPost', (request, response) => {
 
     // Create document in Cloud Firestore
     function createDocument(uploadedFile) {
+      // Set imageUrl to the uploaded image
+      imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`;
+
       db.collection('posts').doc(postData.id).set({
         id: postData.id,
         caption: postData.caption,
         location: postData.location,
         date: parseInt(postData.date),
-        imageUrl: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`
+        imageUrl: imageUrl
       })
         .then(() => {
-          sendPostCreatedPushNotification();
+          sendPostCreatedPushNotification(imageUrl);
           response.send(`Post added: ${postData.id}`);
         });
     }
 
     function sendPostCreatedPushNotification() {
       let subscriptions = [];
+
+      console.log(`----------------------------------------\n`);
+      console.log(`Sending ${'post created'} push notifications\n`);
+
       db.collection('subscriptions').get()
         .then((snapshot) => {
           // Get all stored subscriptions for notifying users
@@ -191,15 +200,22 @@ app.post('/createPost', (request, response) => {
             const pushContent = {
               title: 'New Quasargram Post',
               body: 'New Post Added!',
-              openUrl: '/#/'
+              openUrl: '/#/',
+              imageUrl: imageUrl
             };
 
             const pushContentStringified = JSON.stringify(pushContent);
 
             webpush.sendNotification(pushSubscription, pushContentStringified);
+
+            console.log(`Push notification sent to: ${pushSubscription.endpoint}\n`);
           });
         })
-        .catch((error) => console.error(error.message));
+        .catch((error) => console.error(error.message))
+        .finally(() => {
+          console.log(`Finished sending all ${'post created'} push notifications\n`);
+          console.log(`----------------------------------------\n`);
+        });
     }
   });
 
