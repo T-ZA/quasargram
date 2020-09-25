@@ -7,6 +7,7 @@
         v-show="!imageCaptured"
         class="full-width"
         autoplay
+        playsinline
         ref="video"
         src=""
       />
@@ -88,6 +89,7 @@
           label="Post Image"
           rounded
           unelevated
+          class="q-mb-lg"
         />
       </div>
     </div>

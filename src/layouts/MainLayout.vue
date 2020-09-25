@@ -94,5 +94,8 @@ export default {
   .q-toolbar
     @media (min-width: $breakpoint-sm-min)
       height: 77px
-
+  .platform-ios
+    .q-footer
+      padding-bottom: constant(safe-area-inset-bottom)
+      padding-bottom: env(safe-area-inset-bottom)
 </style>
